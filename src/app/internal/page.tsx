@@ -1,65 +1,77 @@
-import Image from 'next/image';
-import { TokenGate } from '@/components/TokenGate';
-import { getSession } from '@/utils/session';
+'use client'
 
-async function Content({ searchParams }: { searchParams: SearchParams }) {
-  const data = await getSession(searchParams);
-  // Console log the data to see what's available
-  // You can see these logs in the terminal where
-  // you run `yarn dev`
-  console.log({ data });
+import { fetchTasks, updateStatus } from '@/utils/airtable';
+import { useState, useEffect } from 'react';
+
+export default function Page() {
+  const [tasks, setTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchTasks().then(
+      tasks => setTasks(tasks)
+    )
+  }, [])
+
+  const handleOnChange = (taskId: string, event: any) => {
+    const eventValue = event.target.value
+    updateStatus(taskId, event.target.value)
+      .then(() => {
+        setTasks(prevTasks => {
+          const taskIndex = prevTasks.findIndex((task: any) => task.id === taskId);
+          if (taskIndex !== -1) {
+            const newTasks = [...prevTasks]
+            newTasks[taskIndex].fields.Status = eventValue;
+            return newTasks
+          }
+          return prevTasks
+        })
+      })
+  }
+  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Internal Page&nbsp;
-          {data.internalUser && (
-            <code className="font-mono font-bold">
-              — Logged in as {data.internalUser.givenName}{' '}
-              {data.internalUser.familyName}
-            </code>
-          )}
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://copilot.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/copilot_icon.png"
-              alt="Copilot Icon"
-              className="dark:invert"
-              width={24}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-between p-24" style={{backgroundColor: "#D6EFFB"}}>
+      <div className="container mx-auto py-6">
+      <h1 className="text-black text-3xl font-bold mb-8">Tasks</h1>
+      <div className="flex flex-col">
+        {tasks.map((task: any) => {
+          console.log(task.id)
+          return (<div key={task.id} className="bg-white shadow-md rounded-lg p-6 mb-4">
+            <h2 className="text-black font-bold mb-2" style={{fontSize: "20px"}}>{task.fields['Task Name']}</h2>
+            <p className="text-black mb-2" style={{fontSize: "14px"}}>{task.fields['Description']}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <div>
+                <h1 className="text-gray-500" style={{fontWeight: "700"}}>Status</h1>
+                <select className="text-black" style={{background: getBackgroundColor(task.fields.Status), borderRadius: "5px"}} name="status" id="status" value={task.fields.Status} onChange={e => handleOnChange(task.id, e)}>
+                  <option value="To Do">To Do</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Done">Done</option>
+                </select>
+              </div>
+              <div>
+                <h1 className="text-gray-500" style={{fontWeight: "700"}}>Deadline</h1>
+                <h2 className="text-black">{task.fields['Deadline']}</h2>
+              </div>
+              <div>
+                <h1 className="text-gray-500" style={{fontWeight: "700"}}>Priority</h1>
+                <h2 className="text-black">{task.fields.Priority}</h2>
+              </div>
+            </div>
+          </div>
+          )
+        })}
       </div>
-
-      <div className="flex-col mb-32 text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <h2 className={`mb-3 text-2xl font-semibold`}>
-          This page is served to internal users.
-        </h2>
-        <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-          This is an example of a page that is served to internal users only.
-        </p>
-      </div>
-    </main>
-  );
+    </div>
+    </div>
+  )
 }
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  return (
-    <TokenGate searchParams={searchParams}>
-      <Content searchParams={searchParams} />
-    </TokenGate>
-  );
+const getBackgroundColor = (status: string) => {
+  switch (status) {
+    case "To Do":
+      return "#D5CFF7"
+    case "In Progress":
+      return "#EFD6B7"
+    case "Done":
+      return "#D2F4D0"
+  }
 }
