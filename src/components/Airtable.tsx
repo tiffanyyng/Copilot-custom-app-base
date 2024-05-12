@@ -1,16 +1,10 @@
 'use client'
 
-import { fetchTasks, updateStatus } from '@/utils/airtable';
-import { useState, useEffect } from 'react';
+import { Task, updateStatus } from '@/utils/airtable';
+import { useState } from 'react';
 
-const Airtable = ({tasksFromServer}: {tasksFromServer: any[]}) => {
-  const [tasks, setTasks] = useState<any[]>(tasksFromServer);
-
-  // useEffect(() => {
-  //   fetchTasks().then(
-  //     tasks => setTasks(tasks)
-  //   )
-  // }, [])
+const Airtable = ({tasksFromServer}: {tasksFromServer: Task[]}) => {
+  const [tasks, setTasks] = useState<Task[]>(tasksFromServer);
 
   const handleOnChange = (taskId: string, event: any) => {
     const eventValue = event.target.value
@@ -33,11 +27,10 @@ const Airtable = ({tasksFromServer}: {tasksFromServer: any[]}) => {
       <div className="container mx-auto py-6">
       <h1 className="text-black text-3xl font-bold mb-8">Tasks</h1>
       <div className="flex flex-col">
-        {tasks.map((task: any) => {
-          console.log(task.id)
+        {tasks.map((task: Task) => {
           return (<div key={task.id} className="bg-white shadow-md rounded-lg p-6 mb-4">
             <h2 className="text-black font-bold mb-2" style={{fontSize: "20px"}}>{task.fields['Task Name']}</h2>
-            <p className="text-black mb-2" style={{fontSize: "14px"}}>{task.fields['Description']}</p>
+            <p className="text-black mb-2" style={{fontSize: "14px"}}>{task.fields.Description}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
               <div>
                 <h1 className="text-gray-500" style={{fontWeight: "700"}}>Status</h1>

@@ -5,7 +5,20 @@ const API_KEY = 'patTfZWEPCNX3uIv4.cb6bc48250987758c5de339371bfaee4d7ec55ee15474
 const BASE_ID = 'app2Ai3UwGOiSH6nv'; 
 const TABLE_ID = 'tblulJmMq5OF7gDOu';
 
-export const fetchTasks = async () => {
+export type Task = {
+  id: string,
+  fields: TaskFields,
+}
+
+export type TaskFields = {
+  Status: string,
+  Deadline: string,
+  ["Task Name"]: string,
+  Description: string,
+  Priority: string,
+}
+
+export const fetchTasks: () => Promise<Task[]> = async () => {
   try {
       const response = await axios.get(`${BASE_URL}/${BASE_ID}/${TABLE_ID}`, {
           headers: {
